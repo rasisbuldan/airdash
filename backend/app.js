@@ -48,12 +48,7 @@ aedes.on('clientDisconnect', (client) => {
 
 /* MQTT Initialization */
 var subscribeTopic = [
-  'topic/test1',
-  'topic/test2',
-  'topic/acceltest1',
-  'topic/mpu6050',
-  'topic/pi/mpu6050',
-  'topic/navdataraw'
+  'topic/pi/mpu6050'
 ];
 const mqttHost = 'localhost';
 const mqttPort = 1884;
@@ -89,23 +84,6 @@ db.once('open', () => {
 
 
 /* Schema definition */
-const accelDataSchema = new mongoose.Schema({
-  timestamp: {type: Number},
-  mpu1: {
-    x: {type: Number},
-    y: {type: Number},
-    z: {type: Number}
-  },
-  mpu2: {
-    x: {type: Number},
-    y: {type: Number},
-    z: {type: Number}
-  }
-},
-{
-  versionKey: false
-});
-
 const combinedDataSchema = new mongoose.Schema({
   description: {type: String},
   timestamp: {type: Number},
@@ -212,15 +190,9 @@ const navdataSchema = new mongoose.Schema({
   }
 })
 
-const AccelData = mongoose.model('AccelData', accelDataSchema);
 const CombinedData = mongoose.model('CombinedData', combinedDataSchema);
 const FlightData = mongoose.model('FlightData', flightDataSchema);
-const AccelDataStatic = mongoose.model('AccelDataStatic', accelDataSchema);
-const TestMQTT = mongoose.model('TestMQTT', testMQTTSchema);
-const TestMQTTTime = mongoose.model('TestMQTTTime', testMQTTTimeSchema);
 const NavdataDrone = mongoose.model('NavdataDrone', navdataDroneSchema);
-const Navdata = mongoose.model('Navdata', navdataSchema);
-
 
 /********** Global Variable **********/
 var dataBuffer = [];
@@ -312,7 +284,7 @@ app.get('/getdesclist', (req, res, next) => {
 });
 
 
-app.get('/navdataraw2', async (req, res) => {
+app.get('/navdataraw', async (req, res) => {
   let desc = req.query.desc;
   console.log(`Getting desc: [${desc}]`);
 
@@ -372,60 +344,21 @@ app.get('/navdataraw2', async (req, res) => {
   });
 });
 
-app.get('/navdataraw', async (req, res) => {
-  let desc = req.query.desc;
-  console.log(`Getting desc: ${desc}`);
-
-  let payloadArr = {
-    description: 'desc',
-    data: {
-      pwm: [],
-      x: [],
-      y: [],
-      z: []
+app.get('/motorstatus', (req,res) => {
+    let randArr = [];
+    for (let i = 0; i < 4; i++) {
+        randArr.push(Math.floor(Math.random() * 2));
     }
-  }
 
-  let tsStart = 0;
-  let tsStop = 0;
+    let payload = {
+        mot1: randArr[0] === 1 ? 'Normal' : 'Abnormal',
+        mot2: randArr[1] === 1 ? 'Normal' : 'Abnormal',
+        mot3: randArr[2] === 1 ? 'Normal' : 'Abnormal',
+        mot4: randArr[3] === 1 ? 'Normal' : 'Abnormal'
+    }
 
-  // Find navdata documents by description
-  CombinedData.find({
-    'description': desc
-  }, {'_id': 0}).sort({
-    'timestamp': 1
-  }).exec((err, combdatas) => {
-    tsStart = Number(combdatas[0].timestamp);
-    tsStop = Number(combdatas[combdatas.length-1].timestamp);
-
-    combdatas.forEach((doc) => {
-      payloadArr.data.pwm.push({
-        'x': Number(doc.timestamp),
-        'y': Number(doc.pwm)
-      });
-
-      payloadArr.data.x.push({
-        'x': Number(doc.timestamp),
-        'y': Number(doc.vib.x)
-      });
-
-      payloadArr.data.y.push({
-        'x': Number(doc.timestamp),
-        'y': Number(doc.vib.y)
-      });
-
-      payloadArr.data.z.push({
-        'x': Number(doc.timestamp),
-        'y': Number(doc.vib.z)
-      });
-    });
-
-    // Sending response
-    //console.log(`Sending response payload length: ${payload.timestamp.length}`);
-    //console.log(payload.description);
-    res.json(payloadArr);
-  });
-});
+    res.json(payload);
+})
 
 /********** Socket **********/
 io.sockets.on('connection', (socket) => {

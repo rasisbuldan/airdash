@@ -1,5 +1,7 @@
 import React from 'react'
+// eslint-disable-next-line
 import { Container } from '@material-ui/core';
+import { makeStyles } from '@material-ui/core/styles';
 import SideDrawer from './components/SideDrawer'
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 
@@ -11,22 +13,25 @@ import { createBrowserHistory } from 'history';
 
 const history = createBrowserHistory();
 
+const useStyles = makeStyles((theme) => ({
+  root: {
+    height: "50vh"
+  }
+}));
+
 function App(){
-  /* return (
-    <Sidebar items={items}/>
-  ) */
+  const classes = useStyles();
+
   return (
     <Router history={history}>
-      <div>
+      <div className={classes.root}>
         <SideDrawer />
-      </div>
-      <Container disableGutters='true'>
         <Switch>
           <Route path="/home" component={Home} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/databrowser" component={DataBrowser} />
         </Switch>
-      </Container>
+      </div>
     </Router>
   )
 }
