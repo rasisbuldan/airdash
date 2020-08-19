@@ -4,12 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm start\" ",
+    "devmem": "set NODE_OPTIONS=--max_old_space_size=4096 && concurrently \"cd backend && npm run dev\" \"cd frontend && npm start\""
   },
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "express": "^4.17.1",
-    "three": "^0.118.3"
+  "devDependencies": {
+    "concurrently": "^5.2.0",
+    "daemon": "^1.1.0"
   }
 }

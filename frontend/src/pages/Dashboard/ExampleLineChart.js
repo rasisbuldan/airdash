@@ -28,15 +28,6 @@ const initialState = {
   ],
 };
 
-const options = {
-    scale: {
-        ticks: {
-            min: 0,
-            max: 100,
-        }
-    }
-}
-
 class Graph extends React.Component {
 	componentWillMount(){
 		this.setState(initialState);
