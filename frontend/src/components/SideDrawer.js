@@ -2,7 +2,7 @@ import React from 'react';
 import clsx from 'clsx';
 import { Link } from 'react-router-dom';
 // eslint-disable-next-line
-import { Drawer, Button, List, Divider, ListItem, ListItemIcon, ListItemText } from '@material-ui/core';
+import { Drawer, Button, List, Divider, ListItem, ListItemIcon, ListItemText, Container } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { grey } from '@material-ui/core/colors';
 // eslint-disable-next-line
@@ -18,11 +18,20 @@ const useStyles = makeStyles({
   paper: {
     background: grey[900],
     color: 'white',
+  },
+  topBar: {
+    backgroundColor: grey[900],
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center'
+  },
+  topBarTitle: {
+    color: 'white',
   }
 });
 
 function TemporaryDrawer() {
-  const styles = useStyles();
+  const classes = useStyles();
 
   const [state, setState] = React.useState({
     active: false
@@ -34,7 +43,7 @@ function TemporaryDrawer() {
 
   const list = () => (
     <div
-      className={clsx(styles.list)}
+      className={clsx(classes.list)}
       role="presentation"
       onClick={toggleDrawer('active', false)}
       onKeyDown={toggleDrawer('active', false)}
@@ -52,19 +61,22 @@ function TemporaryDrawer() {
   );
 
   return (
-    <div>
+    <div style={{backgroundColor: grey[900]}}>
       <React.Fragment key={'sidedrawer'}>
         <Button onClick={toggleDrawer('active', true)}>
-          <MenuRoundedIcon />
+          <MenuRoundedIcon style={{color: 'white', width: '2.5vw'}} />
         </Button>
         <Drawer
-          classes = {{ paper: styles.paper }}
+          classes = {{ paper: classes.paper }}
           open={state['active']} 
           onClose={toggleDrawer('active', false)}
         >
           {list()}
         </Drawer>
       </React.Fragment>
+      <Button className={classes.topBarTitle} size='large'>
+        Airdash
+      </Button>
     </div>
   )
 }

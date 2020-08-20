@@ -1,4 +1,3 @@
-// eslint-disable-next-line
 import React, { useState, useEffect } from 'react';
 // eslint-disable-next-line
 import { Box, Grid, Container, Paper, Typography, Divider, Button, Card, CardContent } from '@material-ui/core';
@@ -6,19 +5,38 @@ import { makeStyles } from '@material-ui/core/styles';
 import 'fontsource-roboto';
 // eslint-disable-next-line
 import ardrone from './ardrone-trace.png';
-import { red, green, grey } from '@material-ui/core/colors';
-import CheckCircleIcon from '@material-ui/icons/CheckCircle';
+// eslint-disable-next-line
+import { red, green, orange, blue, grey, teal, cyan, brown } from '@material-ui/core/colors';
 import axios from 'axios';
+import PWMChart from './PWMChart';
+import RMSChart from './RMSChart';
+import HealthChart from './HealthChart';
+import HealthChartModel from './HealthChartModel';
+import openSocket from 'socket.io-client';
+
+// Icons
+import CheckCircleIcon from '@material-ui/icons/CheckCircle';
+import FlightTakeoffIcon from '@material-ui/icons/FlightTakeoff';
+import FlightLandIcon from '@material-ui/icons/FlightLand';
+import WarningIcon from '@material-ui/icons/Warning';
+import CachedIcon from '@material-ui/icons/Cached';
+
+/* Socket */
+const socketHost = 'localhost';
+const socketPort = 3002;
+const socket = openSocket(`http://${socketHost}:${socketPort}`);
 
 const useStyles = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
     alignItems: 'center',
-    marginLeft: '5vw',
-    marginRight: '5vw',
+    marginTop: '1vw',
+    marginLeft: '3vw',
+    marginRight: '3vw',
   },
   paperBig: {
-    padding: 10,
+    margin: theme.spacing(1),
+    padding: theme.spacing(1),
     height: 350,
     textAlign: 'center',
     borderRadius: 10,
@@ -30,7 +48,7 @@ const useStyles = makeStyles((theme) => ({
   box: {
     margin: '1vw',
     padding: '2vw',
-    backgroundColor: grey[100],
+    backgroundColor: grey[50],
   },
   paper: {
     padding: theme.spacing(2),
@@ -49,10 +67,16 @@ const useStyles = makeStyles((theme) => ({
   },
   bigPaper: {
     margin: 0,
-    padding: theme.spacing(2),
+    padding: theme.spacing(3),
     textAlign: 'center',
     color: theme.palette.text.secondary,
-    height: '50vh',
+    borderRadius: 10
+  },
+  liveChartpaper: {
+    margin: 0,
+    padding: theme.spacing(1),
+    textAlign: 'center',
+    color: theme.palette.text.secondary,
     borderRadius: 10
   },
   ardrone: {
@@ -62,8 +86,9 @@ const useStyles = makeStyles((theme) => ({
   },
   droneStatusConnected: {
     height: '5vh',
-    backgroundColor: green[500],
+    backgroundColor: green[700],
     margin: theme.spacing(1.5),
+    marginTop: 0,
     padding: theme.spacing(1),
     textAlign: 'left',
     fontSize: 16,
@@ -72,51 +97,54 @@ const useStyles = makeStyles((theme) => ({
   },
   droneStatusDisconnected: {
     height: '5vh',
-    backgroundColor: red[500],
+    backgroundColor: red[700],
     margin: theme.spacing(1.5),
+    marginTop: 0,
     padding: theme.spacing(1),
     textAlign: 'left',
     fontSize: '0.9vw',
     color: 'white',
     verticalAlign: 'middle'
+  },
+  flightButton: {
+    height: '5vh',
+    backgroundColor: blue[500],
+    margin: theme.spacing(1.5),
+    marginTop: 0,
+    padding: theme.spacing(1),
+    textAlign: 'left',
+    fontSize: '0.9vw',
+    color: 'white',
+    verticalAlign: 'middle',
+  },
+  healthChartPaper: {
+    margin: 0,
+    padding: theme.spacing(1),
+    textAlign: 'center',
+    color: theme.palette.text.secondary,
+    borderRadius: 10
+  },
+  healthChartTitle: {
+    marginLeft: '0.2vw',
+    marginBottom: '0.5vw',
+    color: 'black'
   }
 }));
 
-function MotorStatus() {
-  const classes = useStyles();
-  const [RUL, setRUL] = useState(0);
-
-  return(
-    <Grid container spacing={4} style={{paddingLeft: '2vw'}}>
-      <Grid item xs={2}>
-        <Paper elevation={3} style={{width: '5vh', height: '5vh', verticalAlign: 'middle', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', borderRadius: '2.5vh'}}>
-          <CheckCircleIcon style={{width: '4vh', height: '4vh'}}/>
-        </Paper>
-      </Grid>
-      <Grid item xs={10}>
-        <Typography variant='h2' gutterBottom align={'left'} style={{paddingLeft: 15}}>
-          <Box fontWeight={200} fontSize={36}>
-            Motor 1
-          </Box>
-        </Typography>
-      </Grid>
-    </Grid>
-  )
-}
 
 function MotorStatusCard({ number, motstatus }) {
-  const classes = useStyles();
-  const [statusColor, setStatusColor] = useState(grey[300]);
-  const [RUL, setRUL] = useState('unknown');
+  const [statusColor, setStatusColor] = useState(grey[500]);
   const [motorStatus, setMotorStatus] = useState('Normal');
 
   useEffect(() => {
-    setMotorStatus(motstatus);
-    if (motstatus === "Normal") {
-      setStatusColor(green[500]);
-    }
-    else {
-      setStatusColor(red[500]);
+    if (motstatus) {
+      setMotorStatus(motstatus);
+      if (motstatus.status === "Normal") {
+        setStatusColor(green[500]);
+      }
+      else {
+        setStatusColor(orange[500]);
+      }
     }
   }, [motstatus]);
 
@@ -125,18 +153,23 @@ function MotorStatusCard({ number, motstatus }) {
       <Card style={{backgroundColor: statusColor, borderRadius: 15}} elevation={3}>
         <CardContent>
           <Typography variant='h6' align='left' style={{color: 'white'}}>
-            <Box fontWeight={500} fontSize={32}>
+            <Box fontWeight={300} fontSize={32}>
               Motor {number}
             </Box>
           </Typography>
           <Typography variant='h6' align='left' style={{color: grey[200]}}>
             <Box fontWeight={300} fontSize={18}>
-              Status: {motorStatus}
+              Status: <b>{motorStatus.status}</b>
             </Box>
           </Typography>
           <Typography variant='h6' align='left' style={{color: grey[200]}}>
             <Box fontWeight={300} fontSize={18}>
-              RUL: {RUL}
+              RUL: <b>{motorStatus.rul}</b>
+            </Box>
+          </Typography>
+          <Typography variant='h6' align='left' style={{color: grey[200]}}>
+            <Box fontWeight={300} fontSize={18}>
+              RUL: <b>{motorStatus.rul}</b>
             </Box>
           </Typography>
         </CardContent>
@@ -145,23 +178,22 @@ function MotorStatusCard({ number, motstatus }) {
   )
 }
 
+var motStatusInterval = '';
+
 function Dashboard() {
   const classes = useStyles();
   const [status, setStatus] = useState("Disconnected!");
   const [motorStatus, setMotorStatus] = useState({});
-  var motStatusInterval = '';
 
   useEffect(() => {
-    console.log(status);
     if (status === "Connected!") {
       motStatusInterval = setInterval(() => {
         // Get motor status from API
         axios.get('http://localhost:3001/motorstatus')
         .then((res) => {
-          console.log(res);
           setMotorStatus(res.data);
         });
-      }, 2000);
+      }, 1000);
     }
 
     if (status === "Disconnected!") {
@@ -181,11 +213,11 @@ function Dashboard() {
           <Grid item xs={2}>
             <Grid container spacing={3} direction='column'>
               <Grid item xs={2}>
-              <Typography variant='h6' align='left' style={{color: 'black'}} style={{marginBottom: 0}}>
-                <Box fontWeight={300} fontSize={22}>
-                  Connection
-                </Box>
-              </Typography>
+                <Typography variant='h6' align='left' style={{marginBottom: 0, color: 'black'}}>
+                  <Box fontWeight={300} fontSize={22}>
+                    Connection
+                  </Box>
+                </Typography>
               </Grid>
               <Button 
                 className={status === "Connected!" ? classes.droneStatusConnected : classes.droneStatusDisconnected} 
@@ -193,22 +225,60 @@ function Dashboard() {
                 onClick={() => { 
                   setTimeout(() => {
                     status === "Connected!" ? setStatus("Disconnected!") : setStatus("Connected!")
-                  }, 1000) }}
-                style={{marginTop: 0}}
+                  }, 200) }}
               >
                 {status}
+              </Button>
+              <Grid item xs={2}>
+                <Typography variant='h6' align='left' style={{marginBottom: 0, color: 'black'}}>
+                  <Box fontWeight={300} fontSize={22}>
+                    Flight
+                  </Box>
+                </Typography>
+              </Grid>
+              <Button 
+                className={classes.flightButton} 
+                startIcon={<CachedIcon/>}
+                onClick={() => { socket.emit('flightAction', 'ftrim'); }}
+                style={{backgroundColor: brown[500]}}
+              >
+                Flat trim
+              </Button>
+              <Button 
+                className={classes.flightButton} 
+                startIcon={<FlightTakeoffIcon/>}
+                onClick={() => { socket.emit('flightAction', 'takeoff'); }}
+                style={{backgroundColor: blue[500]}}
+              >
+                Takeoff
+              </Button>
+              <Button 
+                className={classes.flightButton} 
+                startIcon={<FlightLandIcon/>}
+                onClick={() => { socket.emit('flightAction', 'land'); }}
+                style={{backgroundColor: teal[500]}}
+              >
+                Land
+              </Button>
+              <Button 
+                className={classes.flightButton} 
+                startIcon={<WarningIcon/>}
+                onClick={() => { socket.emit('flightAction', 'emergency'); }}
+                style={{backgroundColor: red[500]}}
+              >
+                Emergency
               </Button>
             </Grid>
           </Grid>
           <Grid item xs={5}>
-            <Paper className={classes.bigPaper}>
-              <Typography variant='h2' gutterBottom align={'center'}>
-                <Box fontWeight={300} fontSize={36} style={{color: 'black'}}>
+            <Paper elevation={3} className={classes.bigPaper}>
+              <Typography variant='h2' gutterBottom align={'left'}>
+                <Box fontWeight={300} fontSize={30} style={{color: 'black'}}>
                   Motor Status
                 </Box>
               </Typography>
               <Divider/>
-              <Grid container spacing={4} direction='row' style={{marginTop: '2vh'}}>
+              <Grid container spacing={3} direction='row' style={{marginTop: 10}}>
                 <MotorStatusCard number={1} motstatus={motorStatus.mot1}/>
                 <MotorStatusCard number={2} motstatus={motorStatus.mot2}/>
                 <MotorStatusCard number={3} motstatus={motorStatus.mot3}/>
@@ -217,7 +287,52 @@ function Dashboard() {
             </Paper>
           </Grid>
           <Grid item xs={5}>
-            <Paper className={classes.bigPaper}>
+            <Grid container spacing={2} direction='column'>
+              <Grid item xs={12}>
+                <Paper elevation={3} className={classes.liveChartpaper}>
+                  <Typography variant='h6' align='left' style={{marginLeft: '0.2vw', color: 'black'}}>
+                    <Box fontWeight={400} fontSize={22}>
+                      PWM Data
+                    </Box>
+                  </Typography>
+                  <PWMChart />
+                </Paper>
+              </Grid>
+              <Grid item xs={12}>
+                <Paper elevation={3} className={classes.liveChartpaper}>
+                  <Typography variant='h6' align='left' style={{marginLeft: '0.2vw', color: 'black'}}>
+                    <Box fontWeight={400} fontSize={22}>
+                      RMS Data
+                    </Box>
+                  </Typography>
+                  <RMSChart />
+                </Paper>
+              </Grid>
+            </Grid>
+          </Grid>
+          
+        </Grid>
+      </Box>
+      <Box mt={0} p={2} boxShadow={3} className={classes.box} borderRadius={10}>
+        <Grid container spacing={3}>
+          <Grid item xs={6}>
+            <Paper elevation={3} className={classes.healthChartPaper}>
+              <Typography variant='h6' align='left' className={classes.healthChartTitle}>
+                <Box fontWeight={400} fontSize={22}>
+                  Health Indicator Prediction
+                </Box>
+              </Typography>
+              <HealthChart />
+            </Paper>
+          </Grid>
+          <Grid item xs={6}>
+            <Paper elevation={3} className={classes.healthChartPaper}>
+                <Typography variant='h6' align='left' className={classes.healthChartTitle}>
+                  <Box fontWeight={400} fontSize={22}>
+                    Health Indicator (Model) Prediction
+                  </Box>
+                </Typography>
+              <HealthChartModel />
             </Paper>
           </Grid>
         </Grid>

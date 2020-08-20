@@ -53,11 +53,10 @@ function DataBrowser() {
   };
 
   useComponentWillMount(() => {
-    axios.get('http://localhost:3001/getdesclist2')
+    axios.get('http://localhost:3001/desclist')
     .then((response) => {
       //console.log(response.data);
       setDescList({ desc: response.data.descList });
-      console.log('willmount');
       setSelectedDesc(descList.desc[Math.floor(Math.random() * descList.length)]);
       console.log(selectedDesc);
     });
@@ -80,8 +79,8 @@ function DataBrowser() {
   }, [selectedDesc]); */
 
   return(
-    <Container className={classes.main} disableGutters='true'>
-      <Typography variant='h5' gutterBottom>
+    <Container className={classes.main}>
+      <Typography variant='h5'>
         <Box fontWeight={300} fontSize={40} width={1}>
           Data Browser
         </Box>
@@ -97,7 +96,7 @@ function DataBrowser() {
         }}
       />
       <Paper className={classes.paperSingle} elevation={2}>
-        <Typography variant='h5' gutterBottom>
+        <Typography variant='h5'>
           <Box fontWeight={300} fontSize={22} width={1}>
             {selectedDesc}
           </Box>

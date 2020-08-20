@@ -67,6 +67,7 @@ console.log(`[Socket] Socket listening on ${socketPort}`);
 const dbHost = 'localhost';
 const dbName = 'test-db';
 const mongoose = require('mongoose');
+const { json } = require('body-parser');
 require('mongoose-long')(mongoose);
 
 var SchemaTypes = mongoose.Schema.Types;
@@ -214,6 +215,9 @@ var dataBufferAccel = {
   },
 }
 
+var motorStatus = {};
+var motorRUL = {};
+
 var nAccel = 0;
 
 
@@ -222,16 +226,8 @@ app.listen(port, () => {
   console.log(`[Express] Server up and running on port ${port}`);
 });
 
-app.get('/testmsg', (req, res, next) => {
-  res.json('Hello from Test API!');
-});
-
 /*** Dashboard ***/
-app.post('/controlaction', (req, res, next) => {
-  console.log(req.body);
-});
-
-app.get('/getdesclist2', (req, res, next) => {
+app.get('/desclist', (req, res, next) => {
   /* Query distinct description list, filtered with string equality */
   FlightData.distinct('description', (err, descriptions) => {
     /* Filter */
@@ -239,8 +235,6 @@ app.get('/getdesclist2', (req, res, next) => {
       return desc !== '';
     });
 
-    //console.log(descs);
-
     let descObjList = [];
 
     /* Convert to list of object */
@@ -256,33 +250,6 @@ app.get('/getdesclist2', (req, res, next) => {
     });
   });
 });
-
-app.get('/getdesclist', (req, res, next) => {
-  /* Query distinct description list, filtered with string equality */
-  CombinedData.distinct('description', (err, descriptions) => {
-    /* Filter */
-    let descs = descriptions.filter((desc) => {
-      return desc !== '';
-    });
-
-    //console.log(descs);
-
-    let descObjList = [];
-
-    /* Convert to list of object */
-    for (let desc of descs) {
-      descObjList.push({
-        title: desc
-      });
-    }
-
-    /* Send response */
-    res.json({
-      descList: descObjList
-    });
-  });
-});
-
 
 app.get('/navdataraw', async (req, res) => {
   let desc = req.query.desc;
@@ -337,39 +304,22 @@ app.get('/navdataraw', async (req, res) => {
       });
     });
 
-    // Sending response
-    //console.log(`Sending response payload length: ${payload.timestamp.length}`);
-    //console.log(payload.description);
+    // Send response
     res.json(payloadArr);
   });
 });
 
 app.get('/motorstatus', (req,res) => {
-    let randArr = [];
-    for (let i = 0; i < 4; i++) {
-        randArr.push(Math.floor(Math.random() * 2));
-    }
-
-    let payload = {
-        mot1: randArr[0] === 1 ? 'Normal' : 'Abnormal',
-        mot2: randArr[1] === 1 ? 'Normal' : 'Abnormal',
-        mot3: randArr[2] === 1 ? 'Normal' : 'Abnormal',
-        mot4: randArr[3] === 1 ? 'Normal' : 'Abnormal'
-    }
-
-    res.json(payload);
+  res.json(motorStatus);
 })
 
 /********** Socket **********/
 io.sockets.on('connection', (socket) => {
   console.log(`[Socket] connection from ${socket.id}`);
 
-  /* Motion data */
-  socket.on('motionData', (motion) => {
-    console.log(`[Socket] Received motion data from client ${socket.id}: ${motion}`);
-    
-    /* Insert handleMotion */
-    //handleMotion(motion, 0.1);
+  // Motor condition (from dataproc)
+  socket.on('motorConditionRes', (payload) => {
+    motorStatus = JSON.parse(payload);
   });
 });
 
@@ -377,24 +327,6 @@ io.sockets.on('connection', (socket) => {
 /* setInterval(() => {
   io.sockets.emit('chartdata', dataBuffer);
 }, 10); */
-
-/* Live Accel1 Chart */
-/* setInterval(() => {
-  io.sockets.emit('acceldata1', dataBufferAccel.mpu1);
-}, 10); */
-
-/* Live Accel1 Chart */
-/* setInterval(() => {
-  io.sockets.emit('acceldata2', dataBufferAccel.mpu2);
-}, 10); */
-
-/* Live RMS Chart */
-/* setInterval(() => {
-  RMSData = RMSData.slice(-nDataBuffer);
-  io.sockets.emit('chartdatarms', RMSData);
-}, 10); */
-
-
 
 /********** MQTT **********/
 /* Connect to broker and subscribe */
@@ -417,36 +349,9 @@ mqttClient.on('connect', () => {
 mqttClient.on('message', (topic, message) => {
   let d = new Date();
   let dateString = d.toLocaleString();
-  
-  if (topic == 'topic/test1') {
-    TestMQTT.create({
-      timestamp: dateString,
-      topic: topic,
-      message: message.toString()
-    });
-    let num = Number(message.toString());
-    dataBuffer.push(num);
-    if (dataBuffer.length > nDataBuffer) {
-      dataBuffer.shift();
-    }
-    RMSBuffer.push(num);
-  }
-
-  /* Acceleration data demo */
-  else if (topic == 'topic/acceltest1') {
-    var msgData = JSON.parse(message.toString());
-    dataBufferAccel.x.push(msgData.x);
-    dataBufferAccel.y.push(msgData.y);
-    dataBufferAccel.z.push(msgData.z);
-    if (dataBufferAccel.x.length > nDataBuffer) {
-      dataBufferAccel.x.shift();
-      dataBufferAccel.y.shift();
-      dataBufferAccel.z.shift();
-    }
-  }
 
   /* MPU6050 raw vibration (2 mpu) - Raspi ZeroW */
-  else if (topic == 'topic/pi/mpu6050') {
+  if (topic == 'topic/pi/mpu6050') {
     var msgData = JSON.parse(message.toString());
     
     /* Insest to dataBuffer */
@@ -480,17 +385,6 @@ mqttClient.on('message', (topic, message) => {
         z: Number(msgData.mpu2.z)
       }
     });
-  }
-
-  /* MPU6050 raw vibration data (sample) */
-  else if (topic == 'topic/mpu6050') {
-    var msgData = JSON.parse(message.toString());
-    nAccel++;
-    let num = Number(msgData.mpu1.x);
-    accelBuffer.push(num);
-    if (accelBuffer.length > nDataBuffer) {
-      accelBuffer.shift();
-    }
   }
 
   /* Navigation data (ARDrone) */
@@ -535,33 +429,68 @@ mqttClient.on('message', (topic, message) => {
       navdata: payload.navdata
     });
   }
-
-  /* MPU6050 Static */
-  else if (topic == 'topic/static/mpu6050') {
-    let mpudata = JSON.parse(message.toString());
-
-  }
-
 });
 
 
-/********** Calculation **********/
-/* Calculate Root Mean Square (RMS) from array*/
-const CalculateRMS = (arr) => {
-  Math.sqrt(arr.map( val => (val * val)).reduce((acum, val) => acum + val)/arr.length)
-  let square = arr.map((val) => {
-    return Math.pow(val,2);
-  })
-  let ssum = square.reduce((a, b) => a + b, 0);
-  return Math.sqrt(ssum/arr.length);
-};
+/****** Simulate Chart Data ******/
+var pwmData = [];
+var rmsData = [];
+var healthData = [];
+var healthModelData = [];
 
-/* Calculate RMS every 2s */
+/* PWM Data */
 setInterval(() => {
-  let lenRMSBuf = RMSBuffer.length;
-  if (lenRMSBuf > 0) {
-    let rms = CalculateRMS(RMSBuffer);
-    RMSBuffer = RMSBuffer.slice(lenRMSBuf);
-    RMSData.push(rms);
+  let d = new Date().getTime();
+  
+  pwmData.push({
+    x: d,
+    y: Math.floor(80 + Math.random()*175)
+  });
+  
+  let i = pwmData.length-1
+  let tNow = pwmData[i].x
+
+  let pwmPayload = [];
+  while (tNow - pwmData[i].x < 2100 && i > 0) {
+    pwmPayload.unshift({
+      x: pwmData[i].x - tNow,
+      y: pwmData[i].y
+    });
+    i--;
   }
-}, 2000);
+
+  io.sockets.emit('pwmlive', pwmPayload);
+}, 13);
+
+/* RMS Data */
+setInterval(() => {
+  let d = new Date().getTime();
+  
+  rmsData.push({
+    x: d,
+    y: Math.floor(9 + Math.random()*4)
+  });
+  
+  let i = rmsData.length-1
+  let tNow = rmsData[i].x
+
+  let rmsPayload = [];
+  while (tNow - rmsData[i].x < 2100 && i > 0) {
+    rmsPayload.unshift({
+      x: rmsData[i].x - tNow,
+      y: rmsData[i].y
+    });
+    i--;
+  }
+
+  io.sockets.emit('rmslive', rmsPayload);
+}, 13);
+
+
+/******* Python Socket Test ******/
+setInterval(() => {
+  io.sockets.emit('motorConditionReq', 'hello');
+}, 1000);
+
+
+/****** */

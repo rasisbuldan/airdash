@@ -15,7 +15,7 @@ const history = createBrowserHistory();
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    height: "50vh"
+    height: "50vh",
   }
 }));
 

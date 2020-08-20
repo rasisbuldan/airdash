@@ -121,7 +121,7 @@ function NavdataChartRaw(props) {
   useEffect(() => {
     console.log(`get desc: ${props.desc}`)
     if (props.desc !== undefined) {
-      axios.get('http://localhost:3001/navdataraw2', {
+      axios.get('http://localhost:3001/navdataraw', {
         params: {
           desc: props.desc
         }
@@ -290,7 +290,7 @@ function NavdataChartRaw(props) {
         <FeatureButton variant="contained" size="small" color="primary" className={classes.margin} onClick={() => {calcFeature(rawData.data[vibAxis].slice(), peak)}}>
           Peak-to-peak
         </FeatureButton>
-        <Divider orientation="vertical" flexItem='true'/>
+        <Divider orientation="vertical"/>
         <AxisButton variant="contained" size="small" color="secondary" className={classes.margin} onClick={() => {changeAxis('x')}}>
           X
         </AxisButton>
