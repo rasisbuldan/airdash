@@ -19,7 +19,7 @@ const lineDataTemplate = {
       yAxisID: 'data',
       pointRadius: 0,
       data: [
-        {x: -2000, y: 500},
+        {x: -4000, y: 500},
         {x: 0, y: 500},
         {x: 0.000001, y: -100}
       ],
@@ -44,7 +44,7 @@ const lineDataTemplate = {
       yAxisID: 'data',
       pointRadius: 0,
       data: [
-        {x: -2000, y: 255},
+        {x: -4000, y: 255},
         {x: 100, y: 255},
       ],
       borderWidth: 2,
@@ -64,7 +64,7 @@ const lineOptions = {
       {
         type: 'linear',
         ticks: {
-          min: -2000,
+          min: -4000,
           max: 100,
         }
       },

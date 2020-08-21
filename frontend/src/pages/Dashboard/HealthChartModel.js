@@ -1,13 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import { red } from '@material-ui/core/colors';
-import openSocket from 'socket.io-client';
+import axios from 'axios';
 
-/* Socket */
-const socketHost = 'localhost';
-const socketPort = 3002;
-const socket = openSocket(`http://${socketHost}:${socketPort}`);
-
+/* Global Variable */
 const lineDataTemplate = {
   datasets: [
     {
@@ -19,7 +15,7 @@ const lineDataTemplate = {
       yAxisID: 'data',
       pointRadius: 0,
       data: [
-        {x: -1000, y: 500},
+        {x: -100, y: 500},
         {x: 0, y: 500},
         {x: 0.000001, y: -100}
       ],
@@ -60,6 +56,21 @@ const lineDataTemplate = {
       ],
       borderWidth: 2,
     },
+    {
+      label: 'RUL Line',
+      fill: false,
+      lineTension: 0,
+      borderColor: red[500],
+      backgroundColor: red[500],
+      yAxisID: 'data',
+      pointRadius: 0,
+      data: [
+        {x: -100, y: 500},
+        {x: 0, y: 500},
+        {x: 0.000001, y: -100}
+      ],
+      borderWidth: 3,
+    },
   ],
 };
 
@@ -75,8 +86,9 @@ const lineOptions = {
       {
         type: 'linear',
         ticks: {
-          min: -1000,
-          max: 100,
+          min: -100,
+          max: 40,
+          stepSize: 10
         }
       },
     ],
@@ -93,19 +105,21 @@ const lineOptions = {
   }
 };
 
-function HealthChartModel() {
+function HealthChartModel({ update }) {
   const [lineData, setLineData] = useState(lineDataTemplate);
 
   useEffect(() => {
-    socket.on('healthchartmodel', (data) => {
+    axios.get('http://localhost:3001/healthchartmodel')
+    .then((res) => {
       let ld = {
         ...lineDataTemplate
       }
-      ld.datasets[1].data = data.history;
-      ld.datasets[2].data = data.forecast;
+      ld.datasets[1].data = res.data.history;
+      ld.datasets[2].data = res.data.predict;
+      ld.datasets[4].data = res.data.rul;
       setLineData(ld);
     });
-  }, []);
+  }, [update]);
 
   return (
     <Line data={lineData} options={lineOptions} height={'100vw'} />

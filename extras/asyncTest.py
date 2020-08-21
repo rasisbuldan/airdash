@@ -5,16 +5,16 @@ import time
 from random import choice, uniform
 from concurrent.futures import ThreadPoolExecutor
 
-_executor = ThreadPoolExecutor(1)
-
 # Async 
 loop = asyncio.get_event_loop()
-
-i = 0
-j = 0
+_executor = ThreadPoolExecutor(1)
 
 # Create socket client
 sio = socketio.AsyncClient()
+
+# Global Variable
+i = 0
+j = 0
 
 def arr_append(k):
     global j

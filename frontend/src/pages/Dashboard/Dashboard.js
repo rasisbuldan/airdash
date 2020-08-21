@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 // eslint-disable-next-line
 import { Box, Grid, Container, Paper, Typography, Divider, Button, Card, CardContent } from '@material-ui/core';
+import { ToggleButton, ToggleButtonGroup } from '@material-ui/lab';
 import { makeStyles } from '@material-ui/core/styles';
 import 'fontsource-roboto';
 // eslint-disable-next-line
@@ -14,12 +15,13 @@ import HealthChart from './HealthChart';
 import HealthChartModel from './HealthChartModel';
 import openSocket from 'socket.io-client';
 
-// Icons
+/* Icons */
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import FlightTakeoffIcon from '@material-ui/icons/FlightTakeoff';
 import FlightLandIcon from '@material-ui/icons/FlightLand';
 import WarningIcon from '@material-ui/icons/Warning';
 import CachedIcon from '@material-ui/icons/Cached';
+import RefreshIcon from '@material-ui/icons/Refresh';
 
 /* Socket */
 const socketHost = 'localhost';
@@ -128,6 +130,14 @@ const useStyles = makeStyles((theme) => ({
     marginLeft: '0.2vw',
     marginBottom: '0.5vw',
     color: 'black'
+  },
+  axisButton: {
+    padding: theme.spacing(1),
+    margin: 0,
+    marginLeft: theme.spacing(2),
+    height: '1.2vw',
+    border: 0,
+    borderRadius: 0
   }
 }));
 
@@ -184,6 +194,9 @@ function Dashboard() {
   const classes = useStyles();
   const [status, setStatus] = useState("Disconnected!");
   const [motorStatus, setMotorStatus] = useState({});
+  const [rmsAxis, setRmsAxis] = useState('x');
+  const [updateChart, setUpdateChart] = useState(0);
+  const [updateChartModel, setUpdateChartModel] = useState(0);
 
   useEffect(() => {
     if (status === "Connected!") {
@@ -302,7 +315,23 @@ function Dashboard() {
                 <Paper elevation={3} className={classes.liveChartpaper}>
                   <Typography variant='h6' align='left' style={{marginLeft: '0.2vw', color: 'black'}}>
                     <Box fontWeight={400} fontSize={22}>
-                      RMS Data
+                      Feature Data
+                      <ToggleButtonGroup 
+                        size='small'
+                        value={rmsAxis}
+                        exclusive
+                        onChange={(event, val) => {setRmsAxis(val);}}
+                      >
+                        <ToggleButton value='x' className={classes.axisButton}>
+                          X
+                        </ToggleButton>
+                        <ToggleButton value='y' className={classes.axisButton}>
+                          Y
+                        </ToggleButton>
+                        <ToggleButton value='z' className={classes.axisButton}>
+                          Z
+                        </ToggleButton>
+                      </ToggleButtonGroup>
                     </Box>
                   </Typography>
                   <RMSChart />
@@ -320,9 +349,12 @@ function Dashboard() {
               <Typography variant='h6' align='left' className={classes.healthChartTitle}>
                 <Box fontWeight={400} fontSize={22}>
                   Health Indicator Prediction
+                  <Button style={{padding: '0.5vw', marginLeft: '0.5vw'}}>
+                    <RefreshIcon onClick={() => { setUpdateChart((updateChart+1)%2) }}/>
+                  </Button>
                 </Box>
               </Typography>
-              <HealthChart />
+              <HealthChart update={updateChart}/>
             </Paper>
           </Grid>
           <Grid item xs={6}>
@@ -330,9 +362,12 @@ function Dashboard() {
                 <Typography variant='h6' align='left' className={classes.healthChartTitle}>
                   <Box fontWeight={400} fontSize={22}>
                     Health Indicator (Model) Prediction
+                    <Button style={{padding: '0.5vw', marginLeft: '0.5vw'}}>
+                    <RefreshIcon onClick={() => { setUpdateChartModel((updateChartModel+1)%2) }}/>
+                  </Button>
                   </Box>
                 </Typography>
-              <HealthChartModel />
+              <HealthChartModel update={updateChartModel}/>
             </Paper>
           </Grid>
         </Grid>
