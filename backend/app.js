@@ -294,23 +294,6 @@ mqttClient.on('message', (topic, message) => {
   /* MPU6050 raw vibration (2 mpu) - Raspi ZeroW */
   if (topic == 'topic/pi/mpu6050') {
     var msgData = JSON.parse(message.toString());
-    
-    /* Insest to dataBuffer */
-    /* dataBufferAccel.mpu1.x.push(msgData.mpu1.x);
-    dataBufferAccel.mpu1.y.push(msgData.mpu1.y);
-    dataBufferAccel.mpu1.z.push(msgData.mpu1.z);
-    dataBufferAccel.mpu2.x.push(msgData.mpu2.x);
-    dataBufferAccel.mpu2.y.push(msgData.mpu2.y);
-    dataBufferAccel.mpu2.z.push(msgData.mpu2.z);
-
-    if (dataBufferAccel.mpu1.x.length > nDataBufferAccel) {
-      dataBufferAccel.mpu1.x.shift();
-      dataBufferAccel.mpu1.y.shift();
-      dataBufferAccel.mpu1.z.shift();
-      dataBufferAccel.mpu2.x.shift();
-      dataBufferAccel.mpu2.y.shift();
-      dataBufferAccel.mpu2.z.shift();
-    } */
 
     /* Insert to DB */
     AccelData.create({
@@ -596,6 +579,7 @@ var chartPayload = {
   pwm: [],
   rms: []
 };
+
 const insertIntoSimulatedFlightData = (docs) => {
   //console.log(docs[0]);
   simulatedFlightData = simulatedFlightData.concat(docs);
