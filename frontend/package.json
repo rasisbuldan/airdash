@@ -14,7 +14,7 @@
     "clsx": "^1.1.1",
     "compute-kurtosis": "^1.0.0",
     "compute-skewness": "^1.0.1",
-    "fontsource-roboto": "^2.1.4",
+    "fontsource-roboto": "^3.0.3",
     "history": "^5.0.0",
     "react": "^16.13.1",
     "react-chartjs-2": "^2.9.0",
