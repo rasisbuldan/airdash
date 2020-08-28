@@ -11,6 +11,7 @@ import { red, green, orange, blue, grey, teal, cyan, brown } from '@material-ui/
 import axios from 'axios';
 import PWMChart from './PWMChart';
 import RMSChart from './RMSChart';
+import RawChartWrapper from './RawChartWrapper';
 import HealthChart from './HealthChart';
 import HealthChartModel from './HealthChartModel';
 import openSocket from 'socket.io-client';
@@ -137,7 +138,8 @@ const useStyles = makeStyles((theme) => ({
     marginLeft: theme.spacing(2),
     height: '1.2vw',
     border: 0,
-    borderRadius: 0
+    borderRadius: 0,
+    color: 'black',
   }
 }));
 
@@ -169,17 +171,12 @@ function MotorStatusCard({ number, motstatus }) {
           </Typography>
           <Typography variant='h6' align='left' style={{color: grey[200]}}>
             <Box fontWeight={300} fontSize={18}>
-              Status: <b>{motorStatus.status}</b>
+              Status: <b>{motorStatus.status} ({motorStatus.statusPercentage}%)</b>
             </Box>
           </Typography>
           <Typography variant='h6' align='left' style={{color: grey[200]}}>
             <Box fontWeight={300} fontSize={18}>
-              RUL: <b>{motorStatus.rul}</b>
-            </Box>
-          </Typography>
-          <Typography variant='h6' align='left' style={{color: grey[200]}}>
-            <Box fontWeight={300} fontSize={18}>
-              RUL: <b>{motorStatus.rul}</b>
+              Estimated RUL: <b>{motorStatus.rul} jam</b>
             </Box>
           </Typography>
         </CardContent>
@@ -195,6 +192,7 @@ function Dashboard() {
   const [status, setStatus] = useState("Disconnected!");
   const [motorStatus, setMotorStatus] = useState({});
   const [rmsAxis, setRmsAxis] = useState('x');
+  const [navDesc, setNavDesc] = useState('pwm');
   const [updateChart, setUpdateChart] = useState(0);
   const [updateChartModel, setUpdateChartModel] = useState(0);
 
@@ -305,7 +303,26 @@ function Dashboard() {
                 <Paper elevation={3} className={classes.liveChartpaper}>
                   <Typography variant='h6' align='left' style={{marginLeft: '0.2vw', color: 'black'}}>
                     <Box fontWeight={400} fontSize={22}>
-                      PWM Data
+                      Navigation Data
+                      <ToggleButtonGroup 
+                        size='small'
+                        value={navDesc}
+                        exclusive
+                        onChange={(event, val) => {setNavDesc(val);}}
+                      >
+                        <ToggleButton value='pwm' className={classes.axisButton}>
+                          PWM
+                        </ToggleButton>
+                        <ToggleButton value='roll' className={classes.axisButton}>
+                          Roll
+                        </ToggleButton>
+                        <ToggleButton value='pitch' className={classes.axisButton}>
+                          Pitch
+                        </ToggleButton>
+                        <ToggleButton value='yaw' className={classes.axisButton}>
+                          Yaw
+                        </ToggleButton>
+                      </ToggleButtonGroup>
                     </Box>
                   </Typography>
                   <PWMChart />
@@ -339,7 +356,6 @@ function Dashboard() {
               </Grid>
             </Grid>
           </Grid>
-          
         </Grid>
       </Box>
       <Box mt={0} p={2} boxShadow={3} className={classes.box} borderRadius={10}>
@@ -371,6 +387,9 @@ function Dashboard() {
             </Paper>
           </Grid>
         </Grid>
+      </Box>
+      <Box mt={0} p={2} boxShadow={3} className={classes.box} borderRadius={10}>
+        <RawChartWrapper/>
       </Box>
     </div>
   );

@@ -7,26 +7,22 @@ import axios from 'axios';
 const lineDataTemplate = {
   datasets: [
     {
-      label: 'Vertical Line',
-      fill: false,
-      lineTension: 0,
-      borderColor: 'rgba(46,204,113 ,1)',
-      backgroundColor: 'rgba(46,204,113 ,0.05)',
-      yAxisID: 'data',
-      pointRadius: 0,
-      data: [
-        {x: -100, y: 500},
-        {x: 0, y: 500},
-        {x: 0.000001, y: -100}
-      ],
-      borderWidth: 4,
-    },
-    {
-      label: 'Live Data',
+      label: 'History Data',
       fill: true,
       lineTension: 0,
       borderColor: 'rgba(52,152,219, 1)',
       backgroundColor: 'rgba(52,152,219, 0.3)',
+      yAxisID: 'data',
+      pointRadius: 0,
+      data: [{x: 0, y: 0}],
+      borderWidth: 1.5,
+    },
+    {
+      label: 'Window Data',
+      fill: true,
+      lineTension: 0,
+      borderColor: 'rgba(46,204,113 ,1)',
+      backgroundColor: 'rgba(46,204,113 ,0.3)',
       yAxisID: 'data',
       pointRadius: 0,
       data: [{x: 0, y: 0}],
@@ -44,19 +40,6 @@ const lineDataTemplate = {
       borderWidth: 1.5,
     },
     {
-      label: 'Health Limit',
-      fill: false,
-      lineTension: 0,
-      borderColor: red[500],
-      yAxisID: 'data',
-      pointRadius: 0,
-      data: [
-        {x: -1000, y: 75},
-        {x: 100, y: 75},
-      ],
-      borderWidth: 2,
-    },
-    {
       label: 'RUL Line',
       fill: false,
       lineTension: 0,
@@ -71,6 +54,47 @@ const lineDataTemplate = {
       ],
       borderWidth: 3,
     },
+    {
+      label: 'Health Limit',
+      fill: false,
+      lineTension: 0,
+      borderColor: red[500],
+      yAxisID: 'data',
+      pointRadius: 0,
+      data: [
+        {x: -1000, y: 75},
+        {x: 100, y: 75},
+      ],
+      borderWidth: 2,
+    },
+    {
+      label: 'Vertical Line',
+      fill: false,
+      lineTension: 0,
+      borderColor: 'rgba(46,204,113 ,1)',
+      yAxisID: 'data',
+      pointRadius: 0,
+      data: [
+        {x: -100, y: 500},
+        {x: 0, y: 500},
+        {x: 0.000001, y: -100}
+      ],
+      borderWidth: 4,
+    },
+    {
+      label: 'Vertical Line 2',
+      fill: false,
+      lineTension: 0,
+      borderColor: 'rgba(46,204,113 ,1)',
+      yAxisID: 'data',
+      pointRadius: 0,
+      data: [
+        {x: -100, y: 500},
+        {x: -60, y: 500},
+        {x: -60.000001, y: -100}
+      ],
+      borderWidth: 4,
+    },
   ],
 };
 
@@ -84,16 +108,26 @@ const lineOptions = {
   scales: {
     xAxes: [
       {
+        scaleLabel: {
+          display: true,
+          labelString: 'Waktu (s)',
+          fontSize: 16,
+        },
         type: 'linear',
         ticks: {
-          min: -100,
-          max: 40,
+          min: -300,
+          max: 60,
           stepSize: 10
         }
       },
     ],
     yAxes: [
       {
+        scaleLabel: {
+          display: true,
+          labelString: 'Health Indicator',
+          fontSize: 16,
+        },
         id: 'data',
         ticks: {
           min: 0,
@@ -114,9 +148,10 @@ function HealthChartModel({ update }) {
       let ld = {
         ...lineDataTemplate
       }
-      ld.datasets[1].data = res.data.history;
+      ld.datasets[0].data = res.data.history;
+      ld.datasets[1].data = res.data.window;
       ld.datasets[2].data = res.data.predict;
-      ld.datasets[4].data = res.data.rul;
+      ld.datasets[3].data = res.data.rul;
       setLineData(ld);
     });
   }, [update]);

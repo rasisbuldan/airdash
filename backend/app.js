@@ -1,3 +1,6 @@
+/* Import modules */
+
+
 /********** Initialization **********/
 /* Express Initialization */
 const express = require('express');
@@ -48,7 +51,8 @@ aedes.on('clientDisconnect', (client) => {
 
 /* MQTT Initialization */
 var subscribeTopic = [
-  'topic/pi/mpu6050'
+  'topic/pi/mpu6050',
+  'topic/pi/rawmpu'
 ];
 const mqttHost = 'localhost';
 const mqttPort = 1884;
@@ -141,7 +145,11 @@ var dataBuffer = [];
 var RMSBuffer = [];
 var RMSData = [];
 var nDataBuffer = 100;
-var accelBuffer = [];
+var accelBuffer = {
+  x: [{x: -1, y: 10},{x: 0, y: 0}],
+  y: [{x: -1, y: 10},{x: 0, y: 0}],
+  z: [{x: -1, y: 10},{x: 0, y: 0}]
+};
 var nDataBufferAccel = 100;
 var dataBufferAccel = {
   mpu1: {
@@ -291,9 +299,32 @@ mqttClient.on('message', (topic, message) => {
   let d = new Date();
   let dateString = d.toLocaleString();
 
+  if (topic == 'topic/pi/rawmpu') {
+    let msgData = JSON.parse(message.toString());
+    accelBuffer.x.forEach((val,idx,arr) => {
+      val.x -= 1;
+    });
+    accelBuffer.y.forEach((val,idx,arr) => {
+      val.x -= 1;
+    });
+    accelBuffer.z.forEach((val,idx,arr) => {
+      val.x -= 1;
+    });
+
+    accelBuffer.x.push({x: 0, y: Number(msgData.mpu1.x)});
+    accelBuffer.y.push({x: 0, y: Number(msgData.mpu1.y)});
+    accelBuffer.z.push({x: 0, y: Number(msgData.mpu1.z)});
+
+    if (accelBuffer.x.length > 200) {
+      accelBuffer.x.shift();
+      accelBuffer.y.shift();
+      accelBuffer.z.shift();
+    }
+  }
+
   /* MPU6050 raw vibration (2 mpu) - Raspi ZeroW */
-  if (topic == 'topic/pi/mpu6050') {
-    var msgData = JSON.parse(message.toString());
+  else if (topic == 'topic/pi/mpu6050') {
+    let msgData = JSON.parse(message.toString());
 
     /* Insert to DB */
     AccelData.create({
@@ -355,6 +386,11 @@ mqttClient.on('message', (topic, message) => {
   }
 });
 
+/* RMS Data */
+setInterval(() => {
+  io.sockets.emit('rawlive', accelBuffer);
+}, 50);
+
 
 /****** Simulate Chart Data ******/
 var pwmData = [];
@@ -370,29 +406,9 @@ var healthIndicatorModelData = {
   rul: []
 };
 
+
+
 /* PWM Data */
-/* setInterval(() => {
-  let d = new Date().getTime();
-  
-  pwmData.push({
-    x: d,
-    y: Math.floor(80 + Math.random()*175)
-  });
-  
-  let i = pwmData.length-1
-  let tNow = pwmData[i].x
-
-  let pwmPayload = [];
-  while (tNow - pwmData[i].x < 2100 && i > 0) {
-    pwmPayload.unshift({
-      x: pwmData[i].x - tNow,
-      y: pwmData[i].y
-    });
-    i--;
-  }
-
-  io.sockets.emit('pwmlive', pwmPayload);
-}, 13); */
 var simArrIdx = 0;
 setInterval(() => {
   let d = new Date().getTime();
@@ -475,25 +491,39 @@ setInterval(() => {
 /* Health Indicator Chart Data */
 app.get('/healthchart', (req,res) => {
   healthIndicatorData.history = [
-    {x: -100, y: 20 + (Math.random() * 10)},
-    {x: -90, y: 15 + (Math.random() * 10)},
-    {x: -80, y: 20 + (Math.random() * 10)},
-    {x: -70, y: 25 + (Math.random() * 10)},
-    {x: -60, y: 30 + (Math.random() * 10)},
-    {x: -50, y: 35 + (Math.random() * 10)},
-    {x: -40, y: 40 + (Math.random() * 10)},
-    {x: -30, y: 45 + (Math.random() * 10)},
-    {x: -20, y: 50 + (Math.random() * 10)},
-    {x: -10, y: 55 + (Math.random() * 10)},
+    {x: -300, y: 20 + (Math.random() * 5)},
+    {x: -280, y: 24 + (Math.random() * 5)},
+    {x: -260, y: 26 + (Math.random() * 5)},
+    {x: -240, y: 28 + (Math.random() * 5)},
+    {x: -220, y: 30 + (Math.random() * 5)},
+    {x: -200, y: 32 + (Math.random() * 5)},
+    {x: -180, y: 34 + (Math.random() * 5)},
+    {x: -160, y: 36 + (Math.random() * 5)},
+    {x: -140, y: 38 + (Math.random() * 5)},
+    {x: -120, y: 40 + (Math.random() * 5)},
+    {x: -100, y: 42 + (Math.random() * 5)},
+    {x: -80, y: 44 + (Math.random() * 5)},
+    {x: -60, y: 46},
+  ];
+
+  healthIndicatorData.window = [
+    {x: -60, y: 46},
+    {x: -50, y: 48 + (Math.random() * 5)},
+    {x: -40, y: 50 + (Math.random() * 5)},
+    {x: -30, y: 52 + (Math.random() * 5)},
+    {x: -20, y: 54 + (Math.random() * 5)},
+    {x: -10, y: 56 + (Math.random() * 5)},
     {x: 0, y: 60},
   ];
 
   healthIndicatorData.predict = [
     {x: 0, y: 60},
-    {x: 10, y: 65 + (Math.random() * 10)},
-    {x: 20, y: 70 + (Math.random() * 10)},
-    {x: 30, y: 75 + (Math.random() * 10)},
-    {x: 40, y: 80 + (Math.random() * 10)}
+    {x: 10, y: 62 + (Math.random() * 10)},
+    {x: 20, y: 64 + (Math.random() * 10)},
+    {x: 30, y: 68 + (Math.random() * 10)},
+    {x: 40, y: 70 + (Math.random() * 10)},
+    {x: 50, y: 72 + (Math.random() * 10)},
+    {x: 60, y: 76 + (Math.random() * 10)}
   ];
 
   let s = getFailureStep(healthIndicatorData.predict, 75);
@@ -509,25 +539,39 @@ app.get('/healthchart', (req,res) => {
 /* Health Indicator (Model) Chart Data */
 app.get('/healthchartmodel', (req,res) => {
   healthIndicatorModelData.history = [
-    {x: -100, y: 10 + (Math.random() * 10)},
-    {x: -90, y: 15 + (Math.random() * 10)},
-    {x: -80, y: 20 + (Math.random() * 10)},
-    {x: -70, y: 25 + (Math.random() * 10)},
-    {x: -60, y: 30 + (Math.random() * 10)},
-    {x: -50, y: 35 + (Math.random() * 10)},
-    {x: -40, y: 40 + (Math.random() * 10)},
-    {x: -30, y: 45 + (Math.random() * 10)},
-    {x: -20, y: 50 + (Math.random() * 10)},
-    {x: -10, y: 55 + (Math.random() * 10)},
+    {x: -300, y: 20 + (Math.random() * 5)},
+    {x: -280, y: 24 + (Math.random() * 5)},
+    {x: -260, y: 26 + (Math.random() * 5)},
+    {x: -240, y: 28 + (Math.random() * 5)},
+    {x: -220, y: 30 + (Math.random() * 5)},
+    {x: -200, y: 32 + (Math.random() * 5)},
+    {x: -180, y: 34 + (Math.random() * 5)},
+    {x: -160, y: 36 + (Math.random() * 5)},
+    {x: -140, y: 38 + (Math.random() * 5)},
+    {x: -120, y: 40 + (Math.random() * 5)},
+    {x: -100, y: 42 + (Math.random() * 5)},
+    {x: -80, y: 44 + (Math.random() * 5)},
+    {x: -60, y: 46},
+  ];
+
+  healthIndicatorModelData.window = [
+    {x: -60, y: 46},
+    {x: -50, y: 48 + (Math.random() * 5)},
+    {x: -40, y: 50 + (Math.random() * 5)},
+    {x: -30, y: 52 + (Math.random() * 5)},
+    {x: -20, y: 54 + (Math.random() * 5)},
+    {x: -10, y: 56 + (Math.random() * 5)},
     {x: 0, y: 60},
   ];
 
   healthIndicatorModelData.predict = [
     {x: 0, y: 60},
-    {x: 10, y: 65 + (Math.random() * 10)},
-    {x: 20, y: 70 + (Math.random() * 10)},
-    {x: 30, y: 75 + (Math.random() * 10)},
-    {x: 40, y: 80 + (Math.random() * 10)}
+    {x: 10, y: 62 + (Math.random() * 10)},
+    {x: 20, y: 64 + (Math.random() * 10)},
+    {x: 30, y: 68 + (Math.random() * 10)},
+    {x: 40, y: 70 + (Math.random() * 10)},
+    {x: 50, y: 72 + (Math.random() * 10)},
+    {x: 60, y: 76 + (Math.random() * 10)}
   ];
 
   let s = getFailureStep(healthIndicatorModelData.predict, 75);

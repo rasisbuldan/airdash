@@ -2,7 +2,7 @@ import asyncio
 import socketio
 import json
 import time
-from random import choice, uniform
+from random import random, choice, uniform
 from concurrent.futures import ThreadPoolExecutor
 
 _executor = ThreadPoolExecutor(1)
@@ -39,34 +39,41 @@ async def message(data):
 
 @sio.on('motorConditionReq')
 async def on_message(data):
-    print(data['x'])
-    global i
-    i += 1
-    i_local = i
-    print(i_local,time.time())
+    #print(data['x'])
+    #global i
+    #i += 1
+    #i_local = i
+    #print(i_local,time.time())
     
-    a = await loop.run_in_executor(_executor, arr_append, i)
-    print(i_local, a[:5])
+    #a = await loop.run_in_executor(_executor, arr_append, i)
+    #print(i_local, a[:5])
     
     # Process motor condition (random dummy)
-    condValue = ['Normal', 'Abnormal']
+    statusPercentage = [random() for _ in range(4)]
+    status = [('Normal' if sp < 0.6 else 'Abnormal') for sp in statusPercentage]
+    rul = [(200 - sp*100) for sp in statusPercentage]
+
 
     motorCond = {
         'mot1': {
-            'status': choice(condValue),
-            'rul': '{:.1f}'.format(uniform(50,200))
+            'status': status[0],
+            'statusPercentage': '{:.1f}'.format(statusPercentage[0]*100),
+            'rul': '{:.1f}'.format(rul[0])
         },
         'mot2': {
-            'status': choice(condValue),
-            'rul': '{:.1f}'.format(uniform(50,200))
+            'status': status[1],
+            'statusPercentage': '{:.1f}'.format(statusPercentage[1]*100),
+            'rul': '{:.1f}'.format(rul[1])
         },
         'mot3': {
-            'status': choice(condValue),
-            'rul': '{:.1f}'.format(uniform(50,200))
+            'status': status[2],
+            'statusPercentage': '{:.1f}'.format(statusPercentage[2]*100),
+            'rul': '{:.1f}'.format(rul[2])
         },
         'mot4': {
-            'status': choice(condValue),
-            'rul': '{:.1f}'.format(uniform(50,200))
+            'status': status[3],
+            'statusPercentage': '{:.1f}'.format(statusPercentage[3]*100),
+            'rul': '{:.1f}'.format(rul[3])
         }
     }
 
