@@ -2,12 +2,12 @@ import asyncio
 import socketio
 import json
 import time
-from random import choice, uniform
+from random import choice, uniform, random
 from concurrent.futures import ThreadPoolExecutor
 
 _executor = ThreadPoolExecutor(1)
 
-# Async 
+# Async
 loop = asyncio.get_event_loop()
 
 i = 0
@@ -21,10 +21,8 @@ def arr_append(k):
     j += 1
 
     a = []
-    print('loop',j,k)
-    for i in range(100):
+    for i in range(1000000):
         a.append(i)
-    print('loop complete',j,k)
     return a
 
 async def start_server():
@@ -39,33 +37,37 @@ async def message(data):
 
 @sio.on('motorConditionReq')
 async def on_message(data):
-    print(data['x'])
     global i
     i += 1
     i_local = i
-    print(i_local,time.time())
-    
+
     a = await loop.run_in_executor(_executor, arr_append, i)
-    print(i_local, a[:5])
-    
+
     # Process motor condition (random dummy)
+    statusVal = [random()*100 for _ in range(4)]
+
     condValue = ['Normal', 'Abnormal']
+
 
     motorCond = {
         'mot1': {
-            'status': choice(condValue),
+            'status': 'Normal' if statusVal[0] < 60 else 'Abnormal',
+            'statusVal': '{:.1f}'.format(statusVal[0]),
             'rul': '{:.1f}'.format(uniform(50,200))
         },
         'mot2': {
-            'status': choice(condValue),
+            'status': 'Normal' if statusVal[1] < 60 else 'Abnormal',
+            'statusVal': '{:.1f}'.format(statusVal[1]),
             'rul': '{:.1f}'.format(uniform(50,200))
         },
         'mot3': {
-            'status': choice(condValue),
+            'status': 'Normal' if statusVal[2] < 60 else 'Abnormal',
+            'statusVal': '{:.1f}'.format(statusVal[2]),
             'rul': '{:.1f}'.format(uniform(50,200))
         },
         'mot4': {
-            'status': choice(condValue),
+            'status': 'Normal' if statusVal[3] < 60 else 'Abnormal',
+            'statusVal': '{:.1f}'.format(statusVal[3]),
             'rul': '{:.1f}'.format(uniform(50,200))
         }
     }

@@ -1,0 +1,4 @@
+-------- TO DO --------
+[ ] Vibration prediction live
+    [ ] Navdata simulator (using flightdata) -> fdSimulator.js
+    [ ] Model predict (using keras pre-trained model) -> modelPredict.js

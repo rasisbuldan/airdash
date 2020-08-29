@@ -1,4 +1,3 @@
-/********** Initialization **********/
 /* Express Initialization */
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -30,7 +29,7 @@ const server = require('net').createServer(aedes.handle);
 const brokerPort = 1884;
 
 server.listen(brokerPort, () => {
-  console.log(`[Aedes] Broker started and listening to port ${port}`);
+  console.log(`[Aedes] Broker started and listening to port ${brokerPort}`);
 });
 
 aedes.on('client', (client) => {
@@ -156,6 +155,7 @@ var dataBufferAccel = {
   },
 }
 
+
 var motorStatus = {};
 var motorRUL = {};
 
@@ -264,10 +264,6 @@ io.sockets.on('connection', (socket) => {
   });
 });
 
-/* Live Raw Chart */
-/* setInterval(() => {
-  io.sockets.emit('chartdata', dataBuffer);
-}, 10); */
 
 /********** MQTT **********/
 /* Connect to broker and subscribe */
@@ -331,7 +327,7 @@ mqttClient.on('message', (topic, message) => {
         },
       }
     }
-  
+
     if (navdata.demo) {
       payload.navdata.batteryPercentage = navdata.demo.batteryPercentage
       payload.navdata.orientation.roll = navdata.demo.leftRightDegrees
@@ -339,14 +335,14 @@ mqttClient.on('message', (topic, message) => {
       payload.navdata.orientation.yaw = navdata.demo.clockwiseDegrees
       payload.navdata.altitude = navdata.demo.altitude
     }
-  
+
     if (navdata.pwm) {
       payload.navdata.pwm.mot1 = navdata.pwm.motors[0]
       payload.navdata.pwm.mot2 = navdata.pwm.motors[1]
       payload.navdata.pwm.mot3 = navdata.pwm.motors[2]
       payload.navdata.pwm.mot4 = navdata.pwm.motors[3]
     }
-    
+
     var navdataTimeMs = d.getTime();
     NavdataDrone.create({
       timestamp: navdataTimeMs.toString(),
@@ -369,16 +365,18 @@ var healthIndicatorModelData = {
   predict: [],
   rul: []
 };
+var orientationData = {
 
+}
 /* PWM Data */
 /* setInterval(() => {
   let d = new Date().getTime();
-  
+
   pwmData.push({
     x: d,
     y: Math.floor(80 + Math.random()*175)
   });
-  
+
   let i = pwmData.length-1
   let tNow = pwmData[i].x
 
@@ -396,9 +394,9 @@ var healthIndicatorModelData = {
 var simArrIdx = 0;
 setInterval(() => {
   let d = new Date().getTime();
-  
+
   pwmData.push(d);
-  
+
   let i = pwmData.length-1
   let tNow = pwmData[i]
 
@@ -423,12 +421,12 @@ setInterval(() => {
 /* RMS Data */
 setInterval(() => {
   let d = new Date().getTime();
-  
+
   rmsData.push({
     x: d,
     y: Math.floor(9 + Math.random()*4)
   });
-  
+
   let i = rmsData.length-1
   let tNow = rmsData[i].x
 
@@ -446,12 +444,12 @@ setInterval(() => {
 /* var simArrIdx = 0;
 setInterval(() => {
   let d = new Date().getTime();
-  
+
   rmsData.push({
     x: d,
     y: Math.floor(80 + Math.random()*175)
   });
-  
+
   let i = pwmData.length-1
   let tNow = pwmData[i].x
 
@@ -612,11 +610,6 @@ getSimulatedFlightData();
 setInterval(() => {
   io.sockets.emit('motorConditionReq', {x: 'hellox', y: 'helloy'});
 }, 1000);
-
-/* setInterval(() => {
-  io.sockets.emit('rmspredictreq', rmsDataSimulated);
-},50); */
-
 
 /* Helper Function */
 const getFailureStep = (pred, treshold) => {
