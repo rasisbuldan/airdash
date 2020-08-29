@@ -158,6 +158,7 @@ function MotorStatusCard({ number, motstatus }) {
         setStatusColor(orange[500]);
       }
     }
+    console.log(motstatus);
   }, [motstatus]);
 
   return(
@@ -171,12 +172,17 @@ function MotorStatusCard({ number, motstatus }) {
           </Typography>
           <Typography variant='h6' align='left' style={{color: grey[200]}}>
             <Box fontWeight={300} fontSize={18}>
-              Status: <b>{motorStatus.status} ({motorStatus.statusPercentage}%)</b>
+              Status: <b>{motorStatus.status}</b> ({motorStatus.statusVal}%)
             </Box>
           </Typography>
           <Typography variant='h6' align='left' style={{color: grey[200]}}>
             <Box fontWeight={300} fontSize={18}>
-              Estimated RUL: <b>{motorStatus.rul} jam</b>
+              RUL: <b>{motorStatus.rul}</b> 
+            </Box>
+          </Typography>
+          <Typography variant='h6' align='left' style={{color: grey[200]}}>
+            <Box fontWeight={300} fontSize={18}>
+              RUL: <b>{motorStatus.rul}</b>
             </Box>
           </Typography>
         </CardContent>
@@ -211,7 +217,7 @@ function Dashboard() {
       clearInterval(motStatusInterval);
     }
   }, [status]);
-  
+
   return (
     <div className={classes.root}>
       <Typography variant='h2' gutterBottom align={'left'} style={{paddingLeft: 15}}>
@@ -230,10 +236,10 @@ function Dashboard() {
                   </Box>
                 </Typography>
               </Grid>
-              <Button 
-                className={status === "Connected!" ? classes.droneStatusConnected : classes.droneStatusDisconnected} 
+              <Button
+                className={status === "Connected!" ? classes.droneStatusConnected : classes.droneStatusDisconnected}
                 startIcon={<CheckCircleIcon/>}
-                onClick={() => { 
+                onClick={() => {
                   setTimeout(() => {
                     status === "Connected!" ? setStatus("Disconnected!") : setStatus("Connected!")
                   }, 200) }}
@@ -247,32 +253,32 @@ function Dashboard() {
                   </Box>
                 </Typography>
               </Grid>
-              <Button 
-                className={classes.flightButton} 
+              <Button
+                className={classes.flightButton}
                 startIcon={<CachedIcon/>}
                 onClick={() => { socket.emit('flightAction', 'ftrim'); }}
                 style={{backgroundColor: brown[500]}}
               >
                 Flat trim
               </Button>
-              <Button 
-                className={classes.flightButton} 
+              <Button
+                className={classes.flightButton}
                 startIcon={<FlightTakeoffIcon/>}
                 onClick={() => { socket.emit('flightAction', 'takeoff'); }}
                 style={{backgroundColor: blue[500]}}
               >
                 Takeoff
               </Button>
-              <Button 
-                className={classes.flightButton} 
+              <Button
+                className={classes.flightButton}
                 startIcon={<FlightLandIcon/>}
                 onClick={() => { socket.emit('flightAction', 'land'); }}
                 style={{backgroundColor: teal[500]}}
               >
                 Land
               </Button>
-              <Button 
-                className={classes.flightButton} 
+              <Button
+                className={classes.flightButton}
                 startIcon={<WarningIcon/>}
                 onClick={() => { socket.emit('flightAction', 'emergency'); }}
                 style={{backgroundColor: red[500]}}
@@ -333,7 +339,7 @@ function Dashboard() {
                   <Typography variant='h6' align='left' style={{marginLeft: '0.2vw', color: 'black'}}>
                     <Box fontWeight={400} fontSize={22}>
                       Feature Data
-                      <ToggleButtonGroup 
+                      <ToggleButtonGroup
                         size='small'
                         value={rmsAxis}
                         exclusive

@@ -2,12 +2,12 @@ import asyncio
 import socketio
 import json
 import time
-from random import random, choice, uniform
+from random import choice, uniform, random
 from concurrent.futures import ThreadPoolExecutor
 
 _executor = ThreadPoolExecutor(1)
 
-# Async 
+# Async
 loop = asyncio.get_event_loop()
 
 i = 0
@@ -21,10 +21,8 @@ def arr_append(k):
     j += 1
 
     a = []
-    print('loop',j,k)
-    for i in range(100):
+    for i in range(1000000):
         a.append(i)
-    print('loop complete',j,k)
     return a
 
 async def start_server():
@@ -39,41 +37,38 @@ async def message(data):
 
 @sio.on('motorConditionReq')
 async def on_message(data):
-    #print(data['x'])
-    #global i
-    #i += 1
-    #i_local = i
-    #print(i_local,time.time())
-    
-    #a = await loop.run_in_executor(_executor, arr_append, i)
-    #print(i_local, a[:5])
-    
+    global i
+    i += 1
+    i_local = i
+
+    a = await loop.run_in_executor(_executor, arr_append, i)
+
     # Process motor condition (random dummy)
-    statusPercentage = [random() for _ in range(4)]
-    status = [('Normal' if sp < 0.6 else 'Abnormal') for sp in statusPercentage]
-    rul = [(200 - sp*100) for sp in statusPercentage]
+    statusVal = [random()*100 for _ in range(4)]
+
+    condValue = ['Normal', 'Abnormal']
 
 
     motorCond = {
         'mot1': {
-            'status': status[0],
-            'statusPercentage': '{:.1f}'.format(statusPercentage[0]*100),
-            'rul': '{:.1f}'.format(rul[0])
+            'status': 'Normal' if statusVal[0] < 60 else 'Abnormal',
+            'statusVal': '{:.1f}'.format(statusVal[0]),
+            'rul': '{:.1f}'.format(uniform(50,200))
         },
         'mot2': {
-            'status': status[1],
-            'statusPercentage': '{:.1f}'.format(statusPercentage[1]*100),
-            'rul': '{:.1f}'.format(rul[1])
+            'status': 'Normal' if statusVal[1] < 60 else 'Abnormal',
+            'statusVal': '{:.1f}'.format(statusVal[1]),
+            'rul': '{:.1f}'.format(uniform(50,200))
         },
         'mot3': {
-            'status': status[2],
-            'statusPercentage': '{:.1f}'.format(statusPercentage[2]*100),
-            'rul': '{:.1f}'.format(rul[2])
+            'status': 'Normal' if statusVal[2] < 60 else 'Abnormal',
+            'statusVal': '{:.1f}'.format(statusVal[2]),
+            'rul': '{:.1f}'.format(uniform(50,200))
         },
         'mot4': {
-            'status': status[3],
-            'statusPercentage': '{:.1f}'.format(statusPercentage[3]*100),
-            'rul': '{:.1f}'.format(rul[3])
+            'status': 'Normal' if statusVal[3] < 60 else 'Abnormal',
+            'statusVal': '{:.1f}'.format(statusVal[3]),
+            'rul': '{:.1f}'.format(uniform(50,200))
         }
     }
 
