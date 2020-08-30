@@ -115,7 +115,7 @@ socket.on('connect', () => {
   const dummyInterval = setInterval(() => {
     sendDummyNavData();
     sendDummyVibData();
-  }, 50);
+  }, 200);
 })
 
 
