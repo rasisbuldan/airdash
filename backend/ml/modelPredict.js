@@ -12,52 +12,49 @@ const loadModel = async (filename) => {
 const nFeatureInput = 4;
 const nFeatureOutput = 15;
 const nSequence = 10;
+const nVibAxis = 3
 
-var inputBuf = tf.tensor2d([], [0,nFeatureInput]);
-var featureBuf = [];
+var inputVibBuf = tf.tensor2d([], [0,nVibAxis]);
+var inputNavBuf = tf.tensor2d([], [0,nFeatureInput]);
+var featureArr = tf.tensor2d([], [0,nFeatureOutput]);
 var predArr = [];
 
-const addToInputBuf = async (payload) => {
-  /*  Expected Input:
-   *  obj {
-        pwm,
-        r,
-        p,
-        y
-      }
-   */
-  let convTensor = tf.tensor2d([payload.pwm, payload.r, payload.p, payload.y], [1,nFeatureInput]);
-  inputBuf = inputBuf.concat(convTensor, 0);
-
-  let lenBuf = inputBuf.shape[0];
-  if (lenBuf >= nSequence) {
-    featureBuf.push(inputBuf.cumsum());
-    inputBuf = inputBuf.slice([lenBuf]);
-    console.log(`Added data to featureBuf! (${featureBuf.length})`);
-  }
-
-  console.log(`Added data to inputBuf! (${inputBuf.shape[0]})`);
-  //inputBuf.print();
+const sliceColumn = (tensorArr, col) => {
+  return tensorArr.slice([0,col], [tensorArr.shape[0], 1]);
 }
 
-const loopInputBuf = async (n) => {
-  for (let i = 0; i < n; i++) {
-    addToInputBuf({
-      pwm: Math.floor(Math.random()*255),
-      r: Math.random()*2,
-      p: 2 + Math.random()*2,
-      y: 4 + Math.random()*2
-    });
+const aggregate = async (buf) => {
+  // Calculate feature aggregate for each axis, concat into length 15 array
+  let featureBuf = await calculateAggTensor(sliceColumn(buf, 0));
+  featureBuf = featureBuf.concat(await calculateAggTensor(sliceColumn(buf, 1)), 1);
+  featureBuf = featureBuf.concat(await calculateAggTensor(sliceColumn(buf, 2)), 1);
+  
+  // Add calculated feature aggregate to featureArr
+  featureArr = featureArr.concat(featureBuf, 0);
+}
+
+const addToInputVibBuf = async (payload) => {
+  // Convert payload into tensor
+  let convTensor = tf.tensor2d([payload.mpu1.x, payload.mpu1.y, payload.mpu1.z], [1,nVibAxis]);
+  inputVibBuf = inputVibBuf.concat(convTensor, 0);
+
+  // Aggregating
+  let lenBuf = inputVibBuf.shape[0];
+  if (lenBuf >= nSequence) {
+    await aggregate(inputVibBuf);
+    console.log(`Added data to featureBuf! (${featureArr.shape[0]})`);
+    inputVibBuf = inputVibBuf.slice([lenBuf]);
   }
+
+  //console.log(`Added data to inputVibBuf! (${inputVibBuf.shape[0]})`);
 }
 
 const preprocPayload = async (payload) => {
-  let pload = payload;
   let pdata = {
-    pwm: pload.pwm[0],
-    r: pload.orientation[0],
-    p: pload.orientation[1],
-    y: pload.orientation[2]
+    pwm: payload.pwm[0],
+    r: payload.orientation[0],
+    p: payload.orientation[1],
+    y: payload.orientation[2]
   }
 
   return pdata
@@ -74,9 +71,14 @@ io.sockets.on('connection', (socket) => {
   console.log(`[Socket ${socketPort}] connection from ${socket.id}`);
 
   // Raw live flight data
-  socket.on('rawdata', async (payload) => {
-    let pdata = await preprocPayload(payload);
-    addToInputBuf(pdata);
+  socket.on('rawnavdata', async (payload) => {
+    let pload = payload;
+  });
+
+  // Raw live vibration data
+  socket.on('rawvibdata', async (payload) => {
+    //let pdata = await preprocPayload(payload);
+    addToInputVibBuf(payload);
   });
 });
 
@@ -91,27 +93,21 @@ const { input } = require('@tensorflow/tfjs-node-gpu');
 const calcRMS = (arr) => { return qmean([...arr]); }
 const calcKurt = (arr) => { return kurtosis([...arr]); }
 const calcSkew = (arr) => { return skewness([...arr]); }
-const calcCrest = (arr) => { return rms([...arr])/max(arr); }
-const calcP2P = (arr) => { return (max(arr) - min(arr)); }
+const calcCrest = (arr) => { return calcRMS([...arr])/Math.max(...arr); }
+const calcP2P = (arr) => { return (Math.max(...arr) - Math.min(...arr)); }
 
-// Calculate aggregation value
-const calculateAgg = (arr) => {
-  let featureVal = {
-    rms: calcRMS(arr),
-    kurt: calcKurt(arr),
-    skew: calcSkew(arr),
-    crest: calcCrest(arr),
-    p2p: calcP2P(arr)
-  }
+// Calculate aggregation for each time series feature
+const calculateAggTensor = async (arrTensor) => {
+  let arr = await arrTensor.reshape([arrTensor.shape[0]*arrTensor.shape[1]]).array();
+  let featureVal = tf.tensor2d([
+    calcRMS(arr),
+    calcKurt(arr),
+    calcSkew(arr),
+    calcCrest(arr),
+    calcP2P(arr)
+  ], [1,5]);
 
-  console.log(`featureVal from arr[${arr.length}]`);
-  console.log(featureVal);
   return featureVal;
-}
-
-// Aggregation over dataset (currently single feature)
-const aggregate = (arr) => {
-  let i = 0;
 }
 
 
@@ -122,6 +118,6 @@ const aggregate = (arr) => {
   model.summary();
 }) */
 
-loopInputBuf(5).then(() => {
+/* loopInputBuf(5).then(() => {
   inputBuf.print();
-});
+}); */

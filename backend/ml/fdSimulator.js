@@ -78,7 +78,7 @@ var socket = io.connect('http://localhost:3003/', {
   reconnection: true
 });
 
-const sendDummyData = () => {
+const sendDummyNavData = () => {
   let payload = {
     description: 'test data',
     timestamp: 0,
@@ -95,14 +95,27 @@ const sendDummyData = () => {
     ]
   };
 
-  socket.emit('rawdata', payload);
+  socket.emit('rawnavdata', payload);
+}
+
+const sendDummyVibData = () => {
+  let payload = {
+    mpu1: {
+      x: (Math.random() * 2) - 1,
+      y: (Math.random() * 2) - 1,
+      z: (Math.random() * 2) - 1
+    }
+  }
+
+  socket.emit('rawvibdata', payload);
 }
 
 
 socket.on('connect', () => {
   const dummyInterval = setInterval(() => {
-    sendDummyData();
-  }, 500);
+    sendDummyNavData();
+    sendDummyVibData();
+  }, 50);
 })
 
 
