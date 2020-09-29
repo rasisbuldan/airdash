@@ -84,28 +84,22 @@ const lineOptions = {
   }
 };
 
-function RawChartWrapper() {
-  const [lineDataX, setLineDataX] = useState(lineDataTemplate);
-  const [lineDataY, setLineDataY] = useState(lineDataTemplate);
-  const [lineDataZ, setLineDataZ] = useState(lineDataTemplate);
+function DemoChartWrapper() {
+  const [lineData1, setLineData1] = useState(lineDataTemplate);
+  const [lineData2, setLineData2] = useState(lineDataTemplate);
 
   useEffect(() => {
-    socket.on('rawlive', (data) => {
-      let ldX = {
-        ...lineDataX
+    socket.on('demoestimate', (data) => {
+      let ld1 = {
+        ...lineData1
       }
-      let ldY = {
-        ...lineDataY
+      let ld2 = {
+        ...lineData2
       }
-      let ldZ = {
-        ...lineDataZ
-      }
-      ldX.datasets[1].data = data.x;
-      setLineDataX(ldX);
-      ldY.datasets[1].data = data.y;
-      setLineDataY(ldY);
-      ldZ.datasets[1].data = data.z;
-      setLineDataZ(ldZ);
+      ldX1.datasets[1].data = data.x;
+      setLineData1X(ldX);
+      ld2.datasets[1].data = data.y;
+      setLineData2(ldY);
     });
   }, []);
 
@@ -113,24 +107,18 @@ function RawChartWrapper() {
     <div>
       <Typography variant='h2' gutterBottom align={'left'}>
         <Box fontWeight={300} fontSize={30} style={{color: 'black'}}>
-          Axis X
+          Raw Data
         </Box>
       </Typography>
-      <Line data={lineDataX} options={lineOptions} height={'30vw'} />
+      <Line data={lineData1} options={lineOptions} height={'30vw'} />
       <Typography variant='h2' gutterBottom align={'left'}>
         <Box fontWeight={300} fontSize={30} style={{color: 'black'}}>
-          Axis Y
+          Condition Estimate
         </Box>
       </Typography>
-      <Line data={lineDataY} options={lineOptions} height={'30vw'} />
-      <Typography variant='h2' gutterBottom align={'left'}>
-        <Box fontWeight={300} fontSize={30} style={{color: 'black'}}>
-          Axis Z
-        </Box>
-      </Typography>
-      <Line data={lineDataZ} options={lineOptions} height={'30vw'} />
+      <Line data={lineData2} options={lineOptions} height={'30vw'} />
     </div>
   )
 }
 
-export default RawChartWrapper;
+export default DemoChartWrapper;

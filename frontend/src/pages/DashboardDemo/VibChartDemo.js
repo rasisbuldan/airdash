@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import { red } from '@material-ui/core/colors';
 import openSocket from 'socket.io-client';
-// eslint-disable-next-line
-import { Box, Typography } from '@material-ui/core';
 
 /* Socket */
 const socketHost = 'localhost';
@@ -66,8 +64,8 @@ const lineOptions = {
       {
         type: 'linear',
         ticks: {
-        min: -200,
-        max: 10,
+          min: -2000,
+          max: 100,
         }
       },
     ],
@@ -75,62 +73,31 @@ const lineOptions = {
       {
         id: 'data',
         ticks: {
-        min: -16,
-        max: 16,
-        stepSize: 4
+          min: -16,
+          max: 16,
+          stepSize: 4
         }
       }
     ],
   }
 };
 
-function RawChartWrapper() {
-  const [lineDataX, setLineDataX] = useState(lineDataTemplate);
-  const [lineDataY, setLineDataY] = useState(lineDataTemplate);
-  const [lineDataZ, setLineDataZ] = useState(lineDataTemplate);
+function VibChartDemo() {
+  const [lineData, setLineData] = useState(lineDataTemplate);
 
   useEffect(() => {
     socket.on('rawlive', (data) => {
-      let ldX = {
-        ...lineDataX
+      let ld = {
+        ...lineDataTemplate
       }
-      let ldY = {
-        ...lineDataY
-      }
-      let ldZ = {
-        ...lineDataZ
-      }
-      ldX.datasets[1].data = data.x;
-      setLineDataX(ldX);
-      ldY.datasets[1].data = data.y;
-      setLineDataY(ldY);
-      ldZ.datasets[1].data = data.z;
-      setLineDataZ(ldZ);
+      ld.datasets[1].data = data;
+      setLineData(ld);
     });
   }, []);
 
-  return(
-    <div>
-      <Typography variant='h2' gutterBottom align={'left'}>
-        <Box fontWeight={300} fontSize={30} style={{color: 'black'}}>
-          Axis X
-        </Box>
-      </Typography>
-      <Line data={lineDataX} options={lineOptions} height={'30vw'} />
-      <Typography variant='h2' gutterBottom align={'left'}>
-        <Box fontWeight={300} fontSize={30} style={{color: 'black'}}>
-          Axis Y
-        </Box>
-      </Typography>
-      <Line data={lineDataY} options={lineOptions} height={'30vw'} />
-      <Typography variant='h2' gutterBottom align={'left'}>
-        <Box fontWeight={300} fontSize={30} style={{color: 'black'}}>
-          Axis Z
-        </Box>
-      </Typography>
-      <Line data={lineDataZ} options={lineOptions} height={'30vw'} />
-    </div>
+  return (
+    <Line data={lineData} options={lineOptions} height={'30vw'} />
   )
 }
 
-export default RawChartWrapper;
+export default VibChartDemo;

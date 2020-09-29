@@ -54,21 +54,19 @@ const getFlightDescList = async () => {
 }
 
 // Get flight data by description
-const getFlightData = (desc) => {
-  FlightData.find({
+const getFlightData = async (desc) => {
+  await FlightData.find({
     'description': desc
   }, {'_id': 0}).sort({
     'timestamp': 1
   }).exec().then((docs) => {
-    let tsStart = Number(docs[0].timestamp);
-    let tsStop = Number(docs[datas.length-1].timestamp);
+    //let tsStart = Number(docs[0].timestamp);
+    //let tsStop = Number(docs[datas.length-1].timestamp);
 
     docs.forEach((doc) => {
       addToFD(doc);
     });
   });
-
-  return FD;
 }
 
 
@@ -110,19 +108,52 @@ const sendDummyVibData = () => {
   socket.emit('rawvibdata', payload);
 }
 
+const sendVibData = (cursor) => {
+  let payload = {
+    pwm: FD[cursor].pwm[0],
+    mpu1: {
+      x: FD[cursor].mpu1[0],
+      y: FD[cursor].mpu1[1],
+      z: FD[cursor].mpu1[2]
+    },
+    mpu2: {
+      x: FD[cursor].mpu2[0],
+      y: FD[cursor].mpu2[1],
+      z: FD[cursor].mpu2[2]
+    }
+  }
 
-socket.on('connect', () => {
+  socket.emit('rawvibdata', payload);
+}
+
+socket.on('connect', async () => {
+  var descs = await getFlightDescList();
+  var descsFiltered = descs.filter(a => a.includes('aug11_6_h'));
+  console.log(descsFiltered);
+  console.log('Fetching data...');
+  for (desc of descsFiltered) {
+    await getFlightData(desc);
+  }
+  console.log('Fetching data completed!');
+  var fdCursor = 0;
+  const dummyInterval = setInterval(() => {
+    sendDummyNavData();
+    sendVibData(fdCursor);
+    fdCursor = (fdCursor + 1) % FD.length;
+  }, 7);
+});
+
+/***** Main program *****/
+
+
+/* socket.on('connect', () => {
   const dummyInterval = setInterval(() => {
     sendDummyNavData();
     sendDummyVibData();
   }, 200);
-})
-
-
-/***** Main program *****/
+}); */
 
 /* getFlightDescList().then((descs) => {
   console.log(descs[0]);
+  getFlightData('aug9_0_hover20s_2.json');
 }); */
-
-/* Send dummy data */

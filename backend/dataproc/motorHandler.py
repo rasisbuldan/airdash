@@ -51,22 +51,24 @@ async def on_message(data):
 
     motorCond = {
         'mot1': {
-            'status': 'Normal' if statusVal[0] < 60 else 'Abnormal',
+            'status': 'Normal' if statusVal[0] < 90 else 'Abnormal',
             'statusVal': '{:.1f}'.format(statusVal[0]),
-            'rul': '{:.1f}'.format(uniform(50,200))
+            'rul': '{:.1f}'.format(uniform(50,200)),
+            'chartData': [{'x': i, 'y': random()} for i in range(-60,1)]
         },
         'mot2': {
-            'status': 'Normal' if statusVal[1] < 60 else 'Abnormal',
+            'status': 'Normal' if statusVal[1] < 90 else 'Abnormal',
             'statusVal': '{:.1f}'.format(statusVal[1]),
-            'rul': '{:.1f}'.format(uniform(50,200))
+            'rul': '{:.1f}'.format(uniform(50,200)),
+            'chartData': [{'x': i, 'y': random()} for i in range(-60,1)]
         },
         'mot3': {
-            'status': 'Normal' if statusVal[2] < 60 else 'Abnormal',
+            'status': 'Normal' if statusVal[2] < 90 else 'Abnormal',
             'statusVal': '{:.1f}'.format(statusVal[2]),
             'rul': '{:.1f}'.format(uniform(50,200))
         },
         'mot4': {
-            'status': 'Normal' if statusVal[3] < 60 else 'Abnormal',
+            'status': 'Normal' if statusVal[3] < 90 else 'Abnormal',
             'statusVal': '{:.1f}'.format(statusVal[3]),
             'rul': '{:.1f}'.format(uniform(50,200))
         }

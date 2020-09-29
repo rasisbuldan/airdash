@@ -8,6 +8,7 @@ import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 /* Pages */
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard/Dashboard';
+import DashboardDemo from './pages/DashboardDemo/DashboardDemo';
 import DataBrowser from './pages/DataBrowser/DataBrowser';
 import { createBrowserHistory } from 'history';
 
@@ -29,6 +30,7 @@ function App(){
         <Switch>
           <Route path="/home" component={Home} />
           <Route path="/dashboard" component={Dashboard} />
+          <Route path="/dashboarddemo" component={DashboardDemo} />
           <Route path="/databrowser" component={DataBrowser} />
         </Switch>
       </div>

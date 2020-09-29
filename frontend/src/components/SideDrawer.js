@@ -50,7 +50,7 @@ function TemporaryDrawer() {
     >
       <List>
         {
-          ['Home', 'Dashboard', 'Data Browser', 'About'].map((text, index) => (
+          ['Home', 'Dashboard', 'Dashboard Demo', 'Data Browser', 'About'].map((text, index) => (
             <ListItem button component={Link} key={text} to={"/" + text.replace(/ /g, "").toLowerCase()}>
               <ListItemText primary={text} />
             </ListItem>

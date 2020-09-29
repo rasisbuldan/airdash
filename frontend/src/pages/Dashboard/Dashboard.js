@@ -15,6 +15,8 @@ import RawChartWrapper from './RawChartWrapper';
 import HealthChart from './HealthChart';
 import HealthChartModel from './HealthChartModel';
 import openSocket from 'socket.io-client';
+import ConditionChart from './ConditionChart';
+import ConditionChart2 from './ConditionChart2';
 
 /* Icons */
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
@@ -147,48 +149,77 @@ const useStyles = makeStyles((theme) => ({
 function MotorStatusCard({ number, motstatus }) {
   const [statusColor, setStatusColor] = useState(grey[500]);
   const [motorStatus, setMotorStatus] = useState('Normal');
+  const [chartData1, setChartData1] = useState([{x: 0-2, y: 1}, {x: -1, y: 0}, {x: 0, y: 0}]);
+  const [chartData2, setChartData2] = useState([{x: 0-2, y: 1}, {x: -1, y: 0}, {x: 0, y: 0}]);
 
   useEffect(() => {
     if (motstatus) {
-      setMotorStatus(motstatus);
-      if (motstatus.status === "Normal") {
-        setStatusColor(green[500]);
+      if (number === 1) {
+        setMotorStatus(motstatus);
+        if (motstatus.status === "Normal") {
+          setStatusColor(green[500]);
+        }
+        else {
+          setStatusColor(orange[500]);
+        }
+        setChartData1(motstatus.chartData);
       }
       else {
-        setStatusColor(orange[500]);
+        setMotorStatus(motstatus);
+        if (motstatus.status === "Normal") {
+          setStatusColor(green[500]);
+        }
+        else {
+          setStatusColor(orange[500]);
+        }
+        setChartData2(motstatus.chartData);
       }
     }
     console.log(motstatus);
   }, [motstatus]);
 
-  return(
-    <Grid item xs={6}>
-      <Card style={{backgroundColor: statusColor, borderRadius: 15}} elevation={3}>
-        <CardContent>
-          <Typography variant='h6' align='left' style={{color: 'white'}}>
-            <Box fontWeight={300} fontSize={32}>
-              Motor {number}
-            </Box>
-          </Typography>
-          <Typography variant='h6' align='left' style={{color: grey[200]}}>
-            <Box fontWeight={300} fontSize={18}>
-              Status: <b>{motorStatus.status}</b> ({motorStatus.statusVal}%)
-            </Box>
-          </Typography>
-          <Typography variant='h6' align='left' style={{color: grey[200]}}>
-            <Box fontWeight={300} fontSize={18}>
-              RUL: <b>{motorStatus.rul}</b> 
-            </Box>
-          </Typography>
-          <Typography variant='h6' align='left' style={{color: grey[200]}}>
-            <Box fontWeight={300} fontSize={18}>
-              RUL: <b>{motorStatus.rul}</b>
-            </Box>
-          </Typography>
-        </CardContent>
-      </Card>
-    </Grid>
-  )
+  if (number === 1) {
+    return(
+      <Grid item xs={12}>
+        <Card style={{backgroundColor: statusColor, borderRadius: 15}} elevation={3}>
+          <CardContent>
+            <Typography variant='h6' align='left' style={{color: 'white'}}>
+              <Box fontWeight={300} fontSize={36}>
+                Motor {number}
+              </Box>
+            </Typography>
+            <Typography variant='h6' align='left' style={{color: grey[200]}}>
+              <Box fontWeight={300} fontSize={28}>
+                Status: <b>{motorStatus.status}</b> ({motorStatus.statusVal})
+              </Box>
+            </Typography>
+            <ConditionChart cond={chartData1}/>
+          </CardContent>
+        </Card>
+      </Grid>
+    )
+  }
+  else {
+    return(
+      <Grid item xs={12}>
+        <Card style={{backgroundColor: statusColor, borderRadius: 15}} elevation={3}>
+          <CardContent>
+            <Typography variant='h6' align='left' style={{color: 'white'}}>
+              <Box fontWeight={300} fontSize={36}>
+                Motor {number}
+              </Box>
+            </Typography>
+            <Typography variant='h6' align='left' style={{color: grey[200]}}>
+              <Box fontWeight={300} fontSize={28}>
+                Status: <b>{motorStatus.status}</b> ({motorStatus.statusVal})
+              </Box>
+            </Typography>
+            <ConditionChart2 cond={chartData2}/>
+          </CardContent>
+        </Card>
+      </Grid>
+    )
+  }
 }
 
 var motStatusInterval = '';
@@ -298,8 +329,6 @@ function Dashboard() {
               <Grid container spacing={3} direction='row' style={{marginTop: 10}}>
                 <MotorStatusCard number={1} motstatus={motorStatus.mot1}/>
                 <MotorStatusCard number={2} motstatus={motorStatus.mot2}/>
-                <MotorStatusCard number={3} motstatus={motorStatus.mot3}/>
-                <MotorStatusCard number={4} motstatus={motorStatus.mot4}/>
               </Grid>
             </Paper>
           </Grid>
@@ -396,6 +425,8 @@ function Dashboard() {
       </Box>
       <Box mt={0} p={2} boxShadow={3} className={classes.box} borderRadius={10}>
         <RawChartWrapper/>
+      </Box>
+      <Box mt={0} p={2} boxShadow={3} className={classes.box} borderRadius={10}>
       </Box>
     </div>
   );

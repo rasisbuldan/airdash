@@ -10,7 +10,7 @@ app.use(bodyParser.json());
 
 
 /* Express add-on */
-var whitelist = ['http://localhost:3000', 'http://localhost']
+var whitelist = ['http://localhost:3000', 'http://localhost'];
 var corsOptions = {
   origin: function (origin, callback) {
     if (whitelist.indexOf(origin) !== -1) {
@@ -161,7 +161,18 @@ var dataBufferAccel = {
 }
 
 
-var motorStatus = {};
+var motorStatus = {
+  mot1: {
+    status: '',
+    statusVal: '',
+    chartData: ''
+  },
+  mot2: {
+    status: '',
+    statusVal: '',
+    chartData: ''
+  }
+};
 var motorRUL = {};
 
 var nAccel = 0;
@@ -267,6 +278,26 @@ io.sockets.on('connection', (socket) => {
   socket.on('motorConditionRes', (payload) => {
     motorStatus = JSON.parse(payload);
   });
+
+  // Motor condition (from ml/modelPredict)
+  socket.on('motorcond', (payload) => {
+    let cd = payload;
+    //console.log(payload);
+    motorStatus.mot1.status = cd.mot1[cd.mot1.length-1] > 0.85 ? 'Abnormal' : 'Normal';
+    motorStatus.mot1.statusVal = Number(cd.mot1[cd.mot1.length-1]).toFixed(2);
+    motorStatus.mot2.status = cd.mot2[cd.mot2.length-1] > 0.85 ? 'Abnormal' : 'Normal';
+    motorStatus.mot2.statusVal = Number(cd.mot2[cd.mot2.length-1]).toFixed(2);
+
+    let cdbuf1 = [];
+    let cdbuf2 = [];
+    for (let c = 0; c < cd.mot1.length; c++) {
+      cdbuf1.push({x: -(cd.mot1.length-c) + 1, y: cd.mot1[c]});
+      cdbuf2.push({x: -(cd.mot2.length-c) + 1, y: cd.mot2[c]});
+    }
+    motorStatus.mot1.chartData = cdbuf1;
+    motorStatus.mot2.chartData = cdbuf2;
+  });
+  console.log(motorStatus);
 });
 
 
