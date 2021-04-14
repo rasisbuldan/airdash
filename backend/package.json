@@ -14,7 +14,7 @@
   "dependencies": {
     "@tensorflow/tfjs": "^2.3.0",
     "@tensorflow/tfjs-node": "^2.3.0",
-    "@tensorflow/tfjs-node-gpu": "^2.3.0",
+    "@tensorflow/tfjs-node-gpu": "^3.4.0",
     "aedes": "^0.42.5",
     "body-parser": "^1.19.0",
     "compute-kurtosis": "^1.0.0",
