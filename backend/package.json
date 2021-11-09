@@ -26,7 +26,7 @@
     "mongoose-long": "^0.3.1",
     "mqtt": "^4.2.0",
     "nodemon": "^2.0.4",
-    "socket.io": "^2.3.0",
+    "socket.io": "^4.3.2",
     "socket.io-client": "^2.3.0"
   }
 }
